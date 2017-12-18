@@ -56,9 +56,11 @@ var webpackConfig = merge(baseWebpackConfig, {
         // more options:
         // https://github.com/kangax/html-minifier#options-quick-reference
       },
+      chunks: ['app', 'manifest', 'vendor'],
       // necessary to consistently work with multiple chunks via CommonsChunkPlugin
       chunksSortMode: 'dependency'
     }),
+  ].concat(utils.multiplePageHelper().buildPlugins, [
     // split vendor js into its own file
     new webpack.optimize.CommonsChunkPlugin({
       name: 'vendor',
@@ -87,7 +89,7 @@ var webpackConfig = merge(baseWebpackConfig, {
         ignore: ['.*']
       }
     ])
-  ]
+  ])
 })
 
 if (config.build.productionGzip) {

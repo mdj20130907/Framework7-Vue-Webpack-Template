@@ -9,6 +9,7 @@ function resolve (dir) {
 
 module.exports = {
   entry: {
+    ...utils.multiplePageHelper().entries,
     app: './src/main.js'
   },
   output: {

@@ -1,6 +1,8 @@
 var path = require('path')
 var config = require('../config')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
+var glob = require('glob')
+var HtmlWebpackPlugin = require('html-webpack-plugin')
 
 exports.assetsPath = function (_path) {
   var assetsSubDirectory = process.env.NODE_ENV === 'production'
@@ -68,4 +70,47 @@ exports.styleLoaders = function (options) {
     })
   }
   return output
+}
+
+exports.multiplePageHelper = function () {
+  // 入口js文件
+  var entries = {},
+    // 调试环境，生成文件
+    devPlugins = [],
+    // 发布时，生成文件
+    buildPlugins = []
+  // 遍历: 处理windows换行符不一致的问题
+  var viewDir = path.resolve(__dirname, '../src/view').replace(/\\/g, '/')
+  glob.sync(path.resolve(viewDir, '**/main.js')).forEach(function (file) {
+    var viewEntry = file.replace(viewDir, '').replace('/', '').replace('/main.js', '')
+    var mainJs = './src/view/' + viewEntry + '/main.js'
+    var indexHtml = viewEntry + '.html'
+    // console.log(viewEntry, mainJs, indexHtml)
+    entries[viewEntry] = mainJs
+    var baseOptions = {
+      filename: indexHtml,
+      template: 'index.html',
+      inject: true,
+    }
+    devPlugins.push(new HtmlWebpackPlugin({...baseOptions,
+      chunks: [viewEntry],
+    }))
+    buildPlugins.push(new HtmlWebpackPlugin({...baseOptions,
+      minify: {
+        removeComments: true,
+        collapseWhitespace: true,
+        removeAttributeQuotes: true
+        // more options:
+        // https://github.com/kangax/html-minifier#options-quick-reference
+      },
+      chunks: [viewEntry, 'manifest', 'vendor'],
+      // necessary to consistently work with multiple chunks via CommonsChunkPlugin
+      chunksSortMode: 'dependency'
+    }))
+  })
+  return {
+    entries,
+    devPlugins,
+    buildPlugins
+  }
 }
